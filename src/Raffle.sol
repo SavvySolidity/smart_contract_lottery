@@ -8,8 +8,8 @@ pragma solidity ^0.8.18;
 *@notice This contract is a raffle contract that allows users to buy tickets and win prizes
 *@dev Impletments Chainlink VRFv2
  */
-import {VRFCoordinatorV2Interface} from "lib/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import {VRFCoordinatorV2Interface} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import {VRFConsumerBaseV2} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
 contract Raffle is VRFConsumerBaseV2 {
 // imports
@@ -52,6 +52,7 @@ contract Raffle is VRFConsumerBaseV2 {
 // Events
     event EnteredRaffle (address indexed entrant);
     event PickedWinner (address indexed winner);
+    event RequestedRaffleWinner (uint256 indexed requestId);
 // Modifiers
 // Functions
 
@@ -106,13 +107,14 @@ constructor (
             revert Raffle__NotEnoughTimePassed();
         }
          s_raffleState = RaffleState.CALCULATING_WINNER;
-         i_vrfCoordinator.requestRandomWords(
+         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_keyHash,
             i_subscriptionId,
             REQUEST_CONFIRMATION,
             i_callbackGasLimit,
             NUM_WORDS
         );
+        emit RequestedRaffleWinner (requestId);
 }
 
 // public
@@ -161,13 +163,32 @@ constructor (
 // view & pure functions
 /** Getter Functions */
 
-function getTicketPrice() external view returns (uint256) {
-    return i_ticketPrice;}
+    function getTicketPrice() external view returns (uint256) {
+        return i_ticketPrice;
+    }
 
-function getInterval() external view returns (uint256) {
-    return i_interval;}
+    function getInterval() external view returns (uint256) {
+        return i_interval;
+    }
 
-function getRaffleState () external view returns (RaffleState) {
-    return s_raffleState;}    
+    function getRaffleState () external view returns (RaffleState) {
+        return s_raffleState;
+    }    
+
+    function getEntrant (uint256 indexOfEntrant) external view returns (address) {
+        return s_entrants [indexOfEntrant];
+    }
+
+    function getRecentWinner () external view returns (address) {
+        return s_recentWinner;
+    }
+
+    function getLengthOfEntrants () external view returns (uint256) {
+        return s_entrants.length;
+    }
+
+    function getLastTimeStamp () external view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
 }
-
